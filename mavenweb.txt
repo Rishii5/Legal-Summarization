@@ -159,4 +159,116 @@ docker push dockerid/simple
 docker ps -a
 docker rm containerid
 docker rmi dockerid/simple
+
 docker pull dockerid/simple
+
+
+mysql kubernetes
+1. run docker in bg
+2.create a folder create mysql-deploy.yaml
+3.save this 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: root123
+
+4.next in powershell cd this file path
+5.minikube start --driver=docker
+6.kubectl apply -f mysql-deploy.yaml
+7.kubectl get pods
+8.kubectl get deploy
+9.kubectl expose deployment mysql-deploy --type=ClusterIP --port=3306
+10.kubectl get svc
+11.kubectl scale deployment mysql-deploy --replicas=3
+12.kubectl get pods -o wide
+13.if this not work do this 
+minikube start --driver=docker
+minikube kubectl -- get pods -A
+kubectl version --client
+kubectl get nodes
+kubectl create deployment mysql --image=mysql:8.0
+kubectl set env deployment/mysql MYSQL_ROOT_PASSWORD=root123
+kubectl get deployments
+kubectl get pods
+kubectl expose deployment mysql --type=ClusterIP --port=3306 --target-port=3306
+kubectl get service mysql
+kubectl scale deployment mysql --replicas=4
+kubectl get pods -o wide
+kubectl get deployment mysql
+kubectl port-forward svc/mysql 3307:3306
+kubectl delete deployment mysql
+kubectl delete service mysql
+minikube stop
+minikube delete
+
+__________________
+docker compose mysql word
+
+mkdir wordpress-mysql
+cd wordpress-mysql
+Notepad docker_compose.yml
+paste this
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: wp-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppass123
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wp_network
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wp-site
+    depends_on:
+      - db
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass123
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wp_data:/var/www/html
+    networks:
+      - wp_network
+
+networks:
+  wp_network:
+
+volumes:
+  db_data:
+  wp_data:
+
+docker compose up -d
+
+Browser lo 
+http://localhost:8080
